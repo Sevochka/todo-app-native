@@ -10,6 +10,7 @@ import RemoveListDialog from './RemoveListDialog'
 import GridDrawer from './GridDrawer'
 import {addList, addToDo, aunteficate, changeComplete, getList, removeFolder, removeToDo} from "../services/api";
 import {useTodosStore} from "../store/todos.store";
+import { observer } from 'mobx-react-lite';
 
 
 const AddIcon = (props) => (
@@ -17,21 +18,15 @@ const AddIcon = (props) => (
 );
 
 
-const HomeScreen = () => {
+const HomeScreen = observer(() => {
     const [isAddModalVisible, setIsAddModalVisible] = useState(false)
-    const [itemToRemove, setItemToRemove] = useState(false)
-    const [currentToDo, setCurrentToDo] = useState(null)
-    const [lists, setLists] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [isGridView, setIsGridView] = useState(true)
 
-    // const { lists } = useTodosStore(); // OR useContext(CounterStoreContext)
 
-
-    const updateList = async () => {
-        const lists = await getList()
-        setLists(lists)
-    };
+    const { lists, updateList,
+        setCurrentToDo, currentToDo,
+        setItemToRemove} = useTodosStore();
 
     useEffect(async () => {
         await aunteficate();
@@ -43,46 +38,12 @@ const HomeScreen = () => {
     const handleAddBtnClick = () => {
         setIsAddModalVisible(true);
     }
+
     const handleTodoFolderSelect = (index) => {
         setCurrentToDo(lists[index-1])
     }
     const handleHideToDoModal = () => {
         setCurrentToDo(null)
-    }
-    const handleAddList = async (list) => {
-        await addList(list.name, list.emoji)
-        await updateList();
-        setIsAddModalVisible(false)
-    }
-
-    const handleAddToDo = async (newToDoTitle) => {
-        const current = {...currentToDo};
-        current.todos.push({title: newToDoTitle, completed: false});
-        await addToDo(currentToDo.folderId, newToDoTitle)
-    }
-
-    const handleChecked = async (todo, flag) => {
-        const current = {...currentToDo};
-        const indexToDoToBeChanged = current.todos.indexOf(todo);
-        current.todos[indexToDoToBeChanged].completed = flag;
-        setCurrentToDo(current);
-        await changeComplete(todo.todoId, flag)
-    }
-
-    const handleRemoveToDo = async (todo) => {
-        const current = {...currentToDo};
-        const { todoId } = todo;
-        const indexToDoToBeChanged = current.todos.indexOf(todo);
-        current.todos.splice(indexToDoToBeChanged, 1);
-        setCurrentToDo(current);
-        await removeToDo(todoId)
-    }
-
-    const handleRemoveFolder = async () => {
-        await removeFolder(itemToRemove.folderId);
-        await updateList();
-
-        setItemToRemove(null)
     }
 
     if (isLoading){
@@ -91,21 +52,12 @@ const HomeScreen = () => {
     return (
         <>
             <Layout style={styles.homeContainer}>
-                <RemoveListDialog
-                    handleRemoveItem={handleRemoveFolder}
-                    itemToRemove={itemToRemove}
-                    hideModal={() => setItemToRemove(null)}
-                />
+                <RemoveListDialog />
                 <AddModal
                     visible={isAddModalVisible}
                     hideModal={() => setIsAddModalVisible(false)}
-                    addList={handleAddList}/>
+                    />
                 <ToDoModal
-                    handleRemoveToDo={handleRemoveToDo}
-                    handleChecked={handleChecked}
-                    addToDo={handleAddToDo}
-                    todo={currentToDo}
-                    visible={Boolean(currentToDo)}
                     hideModal={handleHideToDoModal}/>
                 <NavigationBar />
                 <Divider style={styles.dividerTop} />
@@ -126,7 +78,7 @@ const HomeScreen = () => {
             <NavigationBottom selectedIndex={isGridView ? 1 : 0} onSelect={(flag) => setIsGridView(flag)}/>
         </>
     )
-}
+});
 
 const styles = StyleSheet.create({
     spinnerContainer: {

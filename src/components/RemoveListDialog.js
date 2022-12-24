@@ -1,8 +1,16 @@
 import {Button, Card, Divider, Layout, Modal, Text} from '@ui-kitten/components'
 import React from 'react'
 import {StyleSheet} from 'react-native'
+import {useTodosStore} from "../store/todos.store";
+import {observer} from "mobx-react-lite";
 
-const RemoveListDialog = ({hideModal, itemToRemove, handleRemoveItem}) => {
+const RemoveListDialog = observer(() => {
+    const { itemToRemove, handleRemoveFolder, setItemToRemove} = useTodosStore();
+
+    const hideModal = () => {
+        setItemToRemove(null)
+    }
+
     if (!itemToRemove){
         return null
     }
@@ -16,7 +24,7 @@ const RemoveListDialog = ({hideModal, itemToRemove, handleRemoveItem}) => {
                 <Text style={{color: 'red', textAlign: 'center'}}>{itemToRemove.name}</Text>
                 <Divider style={styles.divider}/>
                 <Layout>
-                    <Button onPress={handleRemoveItem} status='danger' style={styles.button} appearance='filled'>
+                    <Button onPress={handleRemoveFolder} status='danger' style={styles.button} appearance='filled'>
                        Да
                     </Button>
                     <Button onPress={hideModal} style={styles.button} appearance='outline'>
@@ -26,7 +34,7 @@ const RemoveListDialog = ({hideModal, itemToRemove, handleRemoveItem}) => {
             </Card>
         </Modal>
     )
-}
+});
 
 const styles = StyleSheet.create({
     backdrop: {

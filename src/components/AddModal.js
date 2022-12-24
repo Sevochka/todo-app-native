@@ -1,6 +1,8 @@
 import {Button, Text, Card, Modal, Layout, Input, Divider, Icon} from '@ui-kitten/components'
 import {StyleSheet} from 'react-native'
 import React from 'react'
+import {useTodosStore} from "../store/todos.store";
+import {observer} from "mobx-react-lite";
 
 
 const FolderIcon = (props) => (
@@ -59,12 +61,15 @@ const styles = StyleSheet.create({
     }
 });
 
-const AddModal = ({visible, hideModal, addList}) => {
+const AddModal = observer(({visible, hideModal}) => {
     const [value, setValue] = React.useState('');
     const [activeButtonName, setActiveButtonName] = React.useState(buttonsIcons[0].name);
 
-    const handleCreateClick = () => {
-        addList({
+    const { handleAddList } = useTodosStore();
+
+
+    const handleCreateClick = async () => {
+        await handleAddList({
             name: value,
             emoji: activeButtonName
         })
@@ -120,7 +125,7 @@ const AddModal = ({visible, hideModal, addList}) => {
             </Card>
         </Modal>
     )
-}
+});
 
 
 export default AddModal;
