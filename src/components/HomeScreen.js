@@ -6,9 +6,10 @@ import NavigationBottom from './NavigationBottom'
 import AddModal from './AddModal'
 import {useEffect, useRef, useState} from 'react'
 import ToDoModal from './ToDoModal'
-import Fire from '../Fire'
 import RemoveListDialog from './RemoveListDialog'
 import GridDrawer from './GridDrawer'
+import {addList, addToDo, aunteficate, changeComplete, getList, removeFolder, removeToDo} from "../services/api";
+import {useTodosStore} from "../store/todos.store";
 
 
 const AddIcon = (props) => (
@@ -20,25 +21,23 @@ const HomeScreen = () => {
     const [isAddModalVisible, setIsAddModalVisible] = useState(false)
     const [itemToRemove, setItemToRemove] = useState(false)
     const [currentToDo, setCurrentToDo] = useState(null)
-    // const [user, setUser] = useState(null)
     const [lists, setLists] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [isGridView, setIsGridView] = useState(true)
 
-    const firebase = useRef(null)
+    // const { lists } = useTodosStore(); // OR useContext(CounterStoreContext)
 
-    useEffect(() => {
-        firebase.current = new Fire((error, user) => {
-            console.log(error, user);
-            firebase.current.getLists((lists) => {
-                setLists(lists);
-                // setUser(user);
-                setIsLoading(false)
-            })
-        });
-        return () => {
-            firebase.current.detach();
-        }
+
+    const updateList = async () => {
+        const lists = await getList()
+        setLists(lists)
+    };
+
+    useEffect(async () => {
+        await aunteficate();
+        await updateList();
+
+        setIsLoading(false)
     }, [])
 
     const handleAddBtnClick = () => {
@@ -50,34 +49,39 @@ const HomeScreen = () => {
     const handleHideToDoModal = () => {
         setCurrentToDo(null)
     }
-    const handleAddList = (list) => {
-        firebase.current.addList({...list, todos: []}).then(() => {
-            setIsAddModalVisible(false)
-        });
+    const handleAddList = async (list) => {
+        await addList(list.name, list.emoji)
+        await updateList();
+        setIsAddModalVisible(false)
     }
 
-    const handleAddToDo = (newToDoTitle) => {
+    const handleAddToDo = async (newToDoTitle) => {
         const current = {...currentToDo};
         current.todos.push({title: newToDoTitle, completed: false});
-        firebase.current.updateList(current);
+        await addToDo(currentToDo.folderId, newToDoTitle)
     }
 
-    const handleChecked = (todo, flag) => {
+    const handleChecked = async (todo, flag) => {
         const current = {...currentToDo};
         const indexToDoToBeChanged = current.todos.indexOf(todo);
         current.todos[indexToDoToBeChanged].completed = flag;
-        firebase.current.updateList(current);
+        setCurrentToDo(current);
+        await changeComplete(todo.todoId, flag)
     }
 
-    const handleRemoveToDo = (todo) => {
+    const handleRemoveToDo = async (todo) => {
         const current = {...currentToDo};
+        const { todoId } = todo;
         const indexToDoToBeChanged = current.todos.indexOf(todo);
         current.todos.splice(indexToDoToBeChanged, 1);
-        firebase.current.updateList(current);
+        setCurrentToDo(current);
+        await removeToDo(todoId)
     }
 
-    const handleRemoveFolder = () => {
-        firebase.current.removeList(itemToRemove).then(() => {});
+    const handleRemoveFolder = async () => {
+        await removeFolder(itemToRemove.folderId);
+        await updateList();
+
         setItemToRemove(null)
     }
 
