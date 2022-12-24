@@ -1,6 +1,8 @@
 import {FlatList, Modal, StyleSheet} from 'react-native'
 import {Button, Icon, Text, Layout, CheckBox, Input} from '@ui-kitten/components'
 import {useState} from 'react'
+import {useTodosStore} from "../store/todos.store";
+import {observer} from "mobx-react-lite";
 
 const CloseIcon = (props) => (
     <Icon {...props} name='close-outline'/>
@@ -42,29 +44,35 @@ const ToDoRenderItem = ({todo, handleChecked, handleRemoveToDo}) => {
     )
 }
 
-const ToDoModal = ({visible, hideModal, todo, addToDo, handleChecked, handleRemoveToDo}) => {
+const ToDoModal = observer(({visible, hideModal}) => {
     const [newTodoTitle, setNewTodoTitle] = useState(null);
 
+    const { currentToDo,
+        handleAddToDo: addToDo,
+        handleChecked, handleRemoveToDo,
+        } = useTodosStore();
+
     // Если нет туду то и нет модального окна
-    if (!todo){
+    if (!currentToDo){
         return null;
     }
     const isButtonDisabled = !(newTodoTitle && newTodoTitle.length > 0);
 
-    const todosLength = todo.todos.length;
-    const readyTodos = (todo.todos.filter((el) => el.completed)).length
+    const todosLength = currentToDo.todos.length;
+    const readyTodos = (currentToDo.todos.filter((el) => el.completed)).length
 
     const handleAddToDo = () => {
         addToDo(newTodoTitle)
         setNewTodoTitle(null)
     }
 
+
     return(
-        <Modal visible={visible} animationType={'slide'}>
+        <Modal visible={true} animationType={'slide'}>
             <Layout style={styles.container}>
                 <Button onPress={hideModal} style={styles.closeButton} status='danger' appearance='ghost' accessoryLeft={CloseIcon}/>
                 <Layout style={styles.topText}>
-                    <Text category='h4'>{todo.name}</Text>
+                    <Text category='h4'>{currentToDo.name}</Text>
                     <Text style={{marginLeft: 10}} appearance='hint' category='s2'>{readyTodos} из {todosLength}</Text>
                 </Layout>
 
@@ -72,7 +80,7 @@ const ToDoModal = ({visible, hideModal, todo, addToDo, handleChecked, handleRemo
                     {
                         todosLength
                             ? (<FlatList
-                                data={todo.todos}
+                                data={currentToDo.todos}
                                 keyExtractor={(item, i) => `list-todos-${item.title}-${i}`}
                                 horizontal={false}
                                 renderItem={({item}) => (
@@ -98,7 +106,7 @@ const ToDoModal = ({visible, hideModal, todo, addToDo, handleChecked, handleRemo
             </Layout>
         </Modal>
     )
-}
+});
 
 const styles = StyleSheet.create({
     container: {

@@ -19,6 +19,7 @@ const GridDrawer = ({todos, onSelect, onLongPressItem}) => {
         )
     })
 
+
     return (
         <ScrollView horizontal={false}  style={styles.scrollContainer}>
             <Layout style={styles.container}>
